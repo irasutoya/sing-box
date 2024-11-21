@@ -8,10 +8,10 @@
 <circle cx="43" cy="20" r="7" style="fill:#ffbd2e" />
 <circle cx="66" cy="20" r="7" style="fill:#18c132" />
 <g transform="translate(20,60)" >
-<g style="animation-duration:5.91s;animation-iteration-count:infinite;animation-name:k;animation-timing-function:steps(1,end);font-family:Monaco,Consolas,Menlo,'Bitstream Vera Sans Mono','Powerline Symbols',monospace;font-size:20px">
+<g style="animation-duration:10.00s;animation-iteration-count:infinite;animation-name:k;animation-timing-function:steps(1,end);font-family:Monaco,Consolas,Menlo,'Bitstream Vera Sans Mono','Powerline Symbols',monospace;font-size:20px">
 <style type="text/css">
 <![CDATA[
-@keyframes k {0.059%{transform:translateX(-0px)}0.062%{transform:translateX(-1240px)}10.695%{transform:translateX(-2480px)}10.699%{transform:translateX(-3720px)}10.703%{transform:translateX(-4960px)}11.422%{transform:translateX(-6200px)}11.424%{transform:translateX(-7440px)}38.142%{transform:translateX(-8680px)}38.170%{transform:translateX(-9920px)}53.129%{transform:translateX(-11160px)}55.057%{transform:translateX(-12400px)}55.105%{transform:translateX(-13640px)}59.538%{transform:translateX(-14880px)}64.276%{transform:translateX(-16120px)}67.388%{transform:translateX(-17360px)}67.394%{transform:translateX(-18600px)}184.626%{transform:translateX(-19840px)}}.a{fill:#e5e5e5}.b{fill:#00ff00}.c{fill:#5c5cff}
+@keyframes k {0.000%{transform:translateX(-0px)}1.000%{transform:translateX(-1240px)}12.000%{transform:translateX(-2480px)}13.000%{transform:translateX(-3720px)}14.000%{transform:translateX(-4960px)}15.000%{transform:translateX(-6200px)}16.000%{transform:translateX(-7440px)}31.000%{transform:translateX(-8680px)}32.000%{transform:translateX(-9920px)}53.000%{transform:translateX(-11160px)}54.000%{transform:translateX(-12400px)}55.000%{transform:translateX(-13640px)}61.000%{transform:translateX(-14880px)}62.000%{transform:translateX(-16120px)}63.000%{transform:translateX(-17360px)}64.000%{transform:translateX(-18600px)}100.000%{transform:translateX(-19840px)}}.a{fill:#e5e5e5}.b{fill:#00ff00}.c{fill:#5c5cff}
 ]]>
 </style>
 <g transform="translate(0)">
