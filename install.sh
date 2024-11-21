@@ -128,13 +128,7 @@ determine_architecture() {
   ARCH=$(uname -m)
   case "$ARCH" in
     i386 | i686) ARCH="386" ;;
-    x86_64)
-      if grep -q avx /proc/cpuinfo; then
-        ARCH="amd64-avx"
-      else
-        ARCH="amd64"
-      fi
-      ;;
+    x86_64*) ARCH="amd64" ;;
     armv5*) ARCH="armv5" ;;
     armv7l) ARCH="arm" ;;
     aarch64) ARCH="arm64" ;;
@@ -248,7 +242,7 @@ print_client_config() {
     port: ${PORT}
     password: ${PASSWORD}
     sni: ${DOMAIN}
-    skip-cert-verify: false"
+    skip-cert-verify: true"
   
   echo
   echo -e "\033[1;34m====== 客户端配置 (URL 格式) ======\033[0m"
