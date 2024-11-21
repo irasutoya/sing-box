@@ -1,5 +1,5 @@
 ```shell
-bash <(curl -fsSL https://ie.cx/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/0x0129/hysteria2/main/install.sh)
 ```
 
 ```shell
