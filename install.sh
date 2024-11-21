@@ -8,7 +8,6 @@ SERVICE_FILE="/etc/systemd/system/hysteria2.service"
 CONFIG_FILE="${CONFIG_DIR}/config.yaml"
 CERT_FILE="${CONFIG_DIR}/cert.pem"
 KEY_FILE="${CONFIG_DIR}/key.pem"
-LOG_FILE="${BASE_DIR}/hysteria2.log"
 PORT=443
 DOMAIN="bing.com"
 PASSWORD=$(cat /proc/sys/kernel/random/uuid)
@@ -64,14 +63,6 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
-
-# 根据 BASE_DIR 设置其他路径
-INSTALL_DIR="${BASE_DIR}/bin"
-CONFIG_DIR="${BASE_DIR}/config"
-CONFIG_FILE="${CONFIG_DIR}/config.yaml"
-CERT_FILE="${CONFIG_DIR}/cert.pem"
-KEY_FILE="${CONFIG_DIR}/key.pem"
-LOG_FILE="${BASE_DIR}/hysteria2.log"
 
 # 检查是否是 root 用户
 if [ "$EUID" -ne 0 ]; then
@@ -235,8 +226,8 @@ Type=simple
 ExecStart=${INSTALL_DIR}/hysteria2 server --config ${CONFIG_FILE}
 Restart=on-failure
 RestartSec=5s
-StandardOutput=append:${LOG_FILE}
-StandardError=append:${LOG_FILE}
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
