@@ -239,7 +239,7 @@ EOF
 
 # 打印客户端配置 (hysteria2 URL)
 print_client_config() {
-  SERVER_IP=$(curl -s ifconfig.me) # 自动获取服务器外网 IP
+  SERVER_IP=$(curl -s -4 ip.sb) # 自动获取服务器外网 IP
   HYSTERIA_URL="hysteria2://${PASSWORD}@${SERVER_IP}:${PORT}/?insecure=1&sni=${DOMAIN}#${SERVER_IP}"
   CLASH_META_URL="proxies:
   - name: ${SERVER_IP}
@@ -248,8 +248,7 @@ print_client_config() {
     port: ${PORT}
     password: ${PASSWORD}
     sni: ${DOMAIN}
-    alpn:
-      - h3"
+    skip-cert-verify: false"
   
   echo
   echo -e "\033[1;34m====== 客户端配置 (URL 格式) ======\033[0m"
