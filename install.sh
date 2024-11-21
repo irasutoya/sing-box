@@ -27,20 +27,16 @@ show_help() {
   echo "Usage: $0 [options]"
   echo
   echo "Options:"
-  echo "  -dir         设置文件存放的基础目录 (默认: /root/hysteria2)"
   echo "  -port        设置监听端口 (默认: 443)"
   echo "  -domain      设置伪装域名 (默认: bing.com)"
   echo "  -password    设置访问密码 (默认: 随机生成)"
+  echo "  -uninstall   卸载 hysteria2 服务及所有相关文件"
   echo "  -help        显示帮助信息"
 }
 
 # 解析命令行参数
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -dir)
-      BASE_DIR="$2"
-      shift 2
-      ;;
     -port)
       PORT="$2"
       shift 2
@@ -52,6 +48,10 @@ while [[ $# -gt 0 ]]; do
     -password)
       PASSWORD="$2"
       shift 2
+      ;;
+    -uninstall)
+      UNINSTALL=true
+      shift
       ;;
     -help)
       show_help
@@ -77,6 +77,44 @@ LOG_FILE="${BASE_DIR}/hysteria2.log"
 if [ "$EUID" -ne 0 ]; then
   error "请使用 root 用户运行此脚本"
   exit 1
+fi
+
+# 卸载函数
+uninstall() {
+  log "开始卸载 hysteria2 服务和相关文件..."
+  
+  # 停止服务
+  if systemctl is-active --quiet hysteria2; then
+    log "停止 hysteria2 服务..."
+    systemctl stop hysteria2
+  fi
+
+  # 禁用服务
+  if systemctl is-enabled --quiet hysteria2; then
+    log "禁用 hysteria2 服务..."
+    systemctl disable hysteria2
+  fi
+
+  # 删除服务文件
+  if [ -f "$SERVICE_FILE" ]; then
+    log "删除 systemd 服务文件..."
+    rm -f "$SERVICE_FILE"
+    systemctl daemon-reload
+  fi
+
+  # 删除安装目录和配置文件
+  if [ -d "$BASE_DIR" ]; then
+    log "删除安装目录：${BASE_DIR}..."
+    rm -rf "$BASE_DIR"
+  fi
+
+  log "卸载完成！hysteria2 已被移除。"
+  exit 0
+}
+
+# 如果传入 -uninstall 参数，则执行卸载
+if [ "$UNINSTALL" = true ]; then
+  uninstall
 fi
 
 # 安装依赖
@@ -140,7 +178,6 @@ install_hysteria2() {
   log "hysteria2 已成功安装到 ${INSTALL_DIR}/hysteria2"
 }
 
-
 # 生成自签名证书
 generate_certificates() {
   log "生成自签名证书..."
@@ -154,24 +191,33 @@ create_config_file() {
   log "创建配置文件..."
   mkdir -p "$CONFIG_DIR"
   cat > "$CONFIG_FILE" <<EOF
-# 监听地址与端口
 listen: :${PORT}
 
 tls:
   cert: ${CERT_FILE}
   key: ${KEY_FILE}
 
-# 认证方式
 auth:
   type: password
   password: ${PASSWORD}
 
-# 流量伪装
 masquerade:
   type: proxy
   proxy:
     url: https://${DOMAIN}
     rewriteHost: true
+  string:
+    content: hello stupid world
+    headers:
+      content-type: text/plain
+      custom-stuff: ice cream so good
+    statusCode: 200
+
+bandwidth:
+  up: 0 gbps
+  down: 0 gbps
+
+udpIdleTimeout: 90s
 EOF
   log "配置文件已生成：${CONFIG_FILE}"
 }
