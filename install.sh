@@ -9,7 +9,7 @@ CONFIG_FILE="${CONFIG_DIR}/config.yaml"
 CERT_FILE="${CONFIG_DIR}/cert.pem"
 KEY_FILE="${CONFIG_DIR}/key.pem"
 PORT=443
-DOMAIN="bing.com"
+DOMAIN="gateway.icloud.com"
 PASSWORD=$(cat /proc/sys/kernel/random/uuid)
 
 # 打印日志函数
@@ -27,7 +27,7 @@ show_help() {
   echo
   echo "Options:"
   echo "  -port        设置监听端口 (默认: 443)"
-  echo "  -domain      设置伪装域名 (默认: bing.com)"
+  echo "  -domain      设置伪装域名 (默认: gateway.icloud.com)"
   echo "  -password    设置访问密码 (默认: 随机生成)"
   echo "  -uninstall   卸载 hysteria2 服务及所有相关文件"
   echo "  -help        显示帮助信息"
