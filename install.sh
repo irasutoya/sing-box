@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 默认参数
+# 基础路径设置
 BASE_DIR="/root/sing-box"
 INSTALL_DIR="${BASE_DIR}/bin"
 CONFIG_DIR="${BASE_DIR}/config"
@@ -12,7 +12,7 @@ KEY_FILE="${CONFIG_DIR}/key.pem"
 PORT=443
 PASSWORD=$(cat /proc/sys/kernel/random/uuid)
 
-# 打印日志函数
+# 日志输出函数
 log() {
   echo -e "\033[1;32m[INFO]\033[0m $1"
 }
@@ -32,7 +32,7 @@ show_help() {
   echo "  -help        显示帮助信息"
 }
 
-# 解析命令行参数
+# 参数解析
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -port)
@@ -59,7 +59,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# 检查是否是 root 用户
+# 必须使用 root 权限
 if [ "$EUID" -ne 0 ]; then
   error "请使用 root 用户运行此脚本"
   exit 1
@@ -68,18 +68,15 @@ fi
 # 卸载函数
 uninstall() {
   log "开始卸载 sing-box 服务和相关文件..."
-  
   systemctl stop sing-box 2>/dev/null
   systemctl disable sing-box 2>/dev/null
   rm -f "$SERVICE_FILE"
   systemctl daemon-reload
   rm -rf "$BASE_DIR"
-  
   log "卸载完成！"
   exit 0
 }
 
-# 如果传入 -uninstall 参数，则执行卸载
 if [ "$UNINSTALL" = true ]; then
   uninstall
 fi
@@ -98,7 +95,7 @@ install_dependencies() {
   log "依赖安装完成！"
 }
 
-# 确定架构
+# 架构检测
 determine_architecture() {
   log "检测系统架构..."
   ARCH=$(uname -m)
@@ -119,22 +116,22 @@ determine_architecture() {
   log "检测到架构：$ARCH"
 }
 
-# 下载并安装 sing-box
+# 安装 sing-box
 install_sing_box() {
   log "下载并安装 sing-box..."
   mkdir -p "$INSTALL_DIR"
   LATEST_VERSION=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | jq -r .tag_name)
   DOWNLOAD_URL="https://github.com/SagerNet/sing-box/releases/download/${LATEST_VERSION}/sing-box-${LATEST_VERSION:1}-linux-${ARCH}.tar.gz"
 
-  wget -q -O "/tmp/sing-box.tar.gz" "${DOWNLOAD_URL}"
+  wget -q -O "/tmp/sing-box.tar.gz" "$DOWNLOAD_URL"
   tar -xzf "/tmp/sing-box.tar.gz" -C "/tmp"
-  mv "/tmp/sing-box-${LATEST_VERSION:1}-linux-${ARCH}/sing-box" "${INSTALL_DIR}/sing-box"
+  mv "/tmp/sing-box-${LATEST_VERSION:1}-linux-${ARCH}/sing-box" "$INSTALL_DIR/sing-box"
   rm -rf "/tmp/sing-box.tar.gz" "/tmp/sing-box-${LATEST_VERSION:1}-linux-${ARCH}"
-  chmod +x "${INSTALL_DIR}/sing-box"
-  log "sing-box 已安装到 ${INSTALL_DIR}/sing-box"
+  chmod +x "$INSTALL_DIR/sing-box"
+  log "sing-box 已安装到 $INSTALL_DIR/sing-box"
 }
 
-# 生成自签名证书
+# 生成证书
 generate_certificates() {
   log "生成自签名证书..."
   mkdir -p "$CONFIG_DIR"
@@ -142,48 +139,81 @@ generate_certificates() {
   log "自签名证书已生成！"
 }
 
-# 创建配置文件
+# 生成 Reality 密钥对
+generate_reality_keys() {
+  log "生成 Reality 密钥对..."
+  SHORT_ID=$(openssl rand -hex 8)
+  KEYS=$("$INSTALL_DIR/sing-box" generate reality-keypair)
+  PRIVATE_KEY=$(echo $KEYS | awk -F " " '{print $2}')
+  PUBLIC_KEY=$(echo $KEYS | awk -F " " '{print $4}')
+  log "生成 Reality SHORT_ID: $SHORT_ID"
+  log "生成 Reality PRIVATE_KEY: $PRIVATE_KEY"
+}
+
+# 生成配置文件
 create_config_file() {
   log "创建配置文件..."
   mkdir -p "$CONFIG_DIR"
   cat > "$CONFIG_FILE" <<EOF
 {
-    "inbounds": [
+  "inbounds": [
+    {
+      "type": "hysteria2",
+      "listen": "::",
+      "listen_port": ${PORT},
+      "users": [
         {
-            "type": "hysteria2",
-            "listen": "::",
-            "listen_port": ${PORT},
-            "users": [
-                {
-                    "password": "${PASSWORD}"
-                }
-            ],
-            "tls": {
-                "enabled": true,
-                "alpn": [
-                    "h3"
-                ],
-                "certificate_path": "${CERT_FILE}",
-                "key_path": "${KEY_FILE}"
-            }
+          "password": "${PASSWORD}"
         }
-    ],
-    "outbounds": [
+      ],
+      "tls": {
+        "enabled": true,
+        "alpn": ["h3"],
+        "certificate_path": "${CERT_FILE}",
+        "key_path": "${KEY_FILE}"
+      }
+    },
+    {
+      "type": "vless",
+      "listen": "::",
+      "listen_port": ${PORT},
+      "users": [
         {
-            "type": "direct"
+          "uuid": "${PASSWORD}",
+          "flow": "xtls-rprx-vision"
         }
-    ]
+      ],
+      "tls": {
+        "enabled": true,
+        "server_name": "${DOMAIN}",
+        "reality": {
+          "enabled": true,
+          "handshake": {
+            "server": "${DOMAIN}",
+            "server_port": 443
+          },
+          "private_key": "${PRIVATE_KEY}",
+          "short_id": ["${SHORT_ID}"]
+        }
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "direct"
+    }
+  ]
 }
 EOF
-  log "配置文件已生成：${CONFIG_FILE}"
+  log "配置文件已生成：$CONFIG_FILE"
 }
 
-# 创建 systemd 服务文件
+# 创建 systemd 服务
 create_systemd_service() {
   log "创建 systemd 服务文件..."
   cat > "$SERVICE_FILE" <<EOF
 [Unit]
-Description=Sing-box Service
+Description=sing-box Service
 After=network.target
 
 [Service]
@@ -196,27 +226,41 @@ RestartSec=5s
 WantedBy=multi-user.target
 EOF
   systemctl daemon-reload
-  log "systemd 服务文件已创建：${SERVICE_FILE}"
+  log "systemd 服务文件已创建：$SERVICE_FILE"
 }
 
-# 打印客户端配置
+# 输出客户端配置
 print_client_config() {
   SERVER_IP=$(curl -s https://api.ipify.org)
   V2RAY_URL="hysteria2://${PASSWORD}@${SERVER_IP}:${PORT}/?insecure=1#${SERVER_IP}"
   CLASH_META_URL="proxies:
-  - name: ${SERVER_IP}
+  - name: ${SERVER_IP} Hysteria2
     type: hysteria2
     server: ${SERVER_IP}
     port: ${PORT}
     password: ${PASSWORD}
-    skip-cert-verify: true"
-  
+    skip-cert-verify: true
+  - name: ${SERVER_IP} Vless
+    type: vless
+    server: ${SERVER_IP}
+    port: ${PORT}
+    uuid: ${PASSWORD}
+    network: tcp
+    udp: true
+    tls: true
+    flow: xtls-rprx-vision
+    servername: ${DOMAIN}
+    client-fingerprint: chrome
+    reality-opts:
+      public-key: ${PUBLIC_KEY}
+      short-id: ${SHORT_ID}"
+
   echo
   echo -e "\033[1;34m====== 客户端配置 (V2Ray 格式) ======\033[0m"
-  echo "${V2RAY_URL}"
+  echo "$V2RAY_URL"
   echo
   echo -e "\033[1;34m====== 客户端配置 (Clash Meta 格式) ======\033[0m"
-  echo "${CLASH_META_URL}"
+  echo "$CLASH_META_URL"
   echo
 }
 
@@ -234,10 +278,11 @@ main() {
   determine_architecture
   install_sing_box
   generate_certificates
+  generate_reality_keys
   create_config_file
   create_systemd_service
   start_service
-  log "sing-box 安装完成！文件路径：${BASE_DIR}"
+  log "sing-box 安装完成！文件路径：$BASE_DIR"
   print_client_config
 }
 
