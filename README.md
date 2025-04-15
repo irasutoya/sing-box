@@ -1,9 +1,9 @@
-# Hysteria2 一键安装脚本
+# sing-box 一键安装脚本
 
 ## 使用方法
 
 ```shell
-bash <(curl -fsSL https://raw.githubusercontent.com/irasutoya/hysteria2/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/irasutoya/sing-box/main/install.sh)
 ```
 
 ## 帮助
