@@ -1,22 +1,74 @@
 # sing-box 一键安装脚本
 
+## 功能介绍
+
+这是一个用于自动安装和配置 sing-box 的脚本，主要功能包括：
+
+- 自动检测系统架构并安装对应版本
+- 自动生成自签名证书
+- 配置 hysteria2 协议
+- 创建并启用 systemd 服务
+- 生成客户端配置信息
+
+## 系统要求
+
+- 支持 Debian/Ubuntu 或 CentOS/RHEL 系列 Linux 系统
+- 需要 root 权限运行
+- 支持的系统架构：amd64, arm64, armv7, armv6, 386, mips64le, mipsle, ppc64le, riscv64, s390x, loong64
+
 ## 使用方法
 
 ```shell
 bash <(curl -fsSL https://raw.githubusercontent.com/irasutoya/sing-box/main/install.sh)
 ```
 
-## 帮助
+## 命令选项
 
 ```shell
-Usage: install.sh [options]
+用法: install.sh [选项]
 
-Options:
+选项:
   -port        设置监听端口 (默认: 443)
   -password    设置访问密码 (默认: 随机生成)
   -uninstall   卸载 sing-box 服务及所有相关文件
   -help        显示帮助信息
 ```
+
+## 安装路径
+
+- 主目录: `/root/sing-box`
+- 可执行文件: `/root/sing-box/bin/sing-box`
+- 配置文件: `/root/sing-box/config/config.json`
+- 证书文件: `/root/sing-box/config/cert.pem` 和 `/root/sing-box/config/key.pem`
+- 服务文件: `/etc/systemd/system/sing-box.service`
+
+## 客户端配置
+
+安装完成后，脚本会自动生成以下格式的客户端配置信息：
+
+### V2Ray 格式
+
+```
+hysteria2://{PASSWORD}@{SERVER_IP}:{PORT}/?insecure=1#{SERVER_IP}
+```
+
+### Clash Meta 格式
+
+```yaml
+proxies:
+  - name: {SERVER_IP}
+    type: hysteria2
+    server: {SERVER_IP}
+    port: {PORT}
+    password: {PASSWORD}
+    skip-cert-verify: true
+```
+
+## 故障排除
+
+- 如果服务启动失败，可以使用 `journalctl -u sing-box` 查看详细日志
+- 确保防火墙已开放对应端口
+- 如需重新配置，可以先卸载再重新安装
 
 ## 警告
 
