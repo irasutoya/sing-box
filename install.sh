@@ -312,7 +312,6 @@ main() {
   start_service
   log "sing-box 安装完成！文件路径：$BASE_DIR"
   print_client_config
-  echo -e "${GREEN}安装成功！您可以使用以上配置信息连接到您的 sing-box 服务。${NC}"
 }
 
 # 执行主函数
