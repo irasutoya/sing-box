@@ -210,7 +210,6 @@ create_config_file() {
       ],
       "tls": {
         "enabled": true,
-        "alpn": ["h3"],
         "certificate_path": "${CERT_FILE}",
         "key_path": "${KEY_FILE}"
       }
