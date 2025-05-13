@@ -210,6 +210,7 @@ create_config_file() {
       ],
       "tls": {
         "enabled": true,
+        "server_name": "${DOMAIN}",
         "certificate_path": "${CERT_FILE}",
         "key_path": "${KEY_FILE}"
       }
@@ -260,13 +261,16 @@ print_client_config() {
   fi
   
   # 生成 V2Ray 格式的 URL
-  V2RAY_URL="hysteria2://${PASSWORD}@${SERVER_IP}:${PORT}/?insecure=1#${SERVER_IP}"
+  V2RAY_URL="hysteria2://${PASSWORD}@${SERVER_IP}:${PORT}/?insecure=1&sni=${DOMAIN}#${SERVER_IP}"
   CLASH_META_CONFIG="proxies:
   - name: ${SERVER_IP}
     type: hysteria2
     server: ${SERVER_IP}
     port: ${PORT}
     password: ${PASSWORD}
+    sni: ${DOMAIN}
+    alpn: 
+      - h3
     skip-cert-verify: true"
 
   # 打印配置信息
