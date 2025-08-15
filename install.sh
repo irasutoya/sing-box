@@ -10,7 +10,7 @@ SERVICE_FILE="/etc/systemd/system/sing-box.service"
 CONFIG_FILE="${CONFIG_DIR}/config.json"
 DOMAIN="updates.cdn-apple.com"
 PORT=443
-UUID_VAR=$(cat /proc/sys/kernel/random/uuid)
+UUID=$(cat /proc/sys/kernel/random/uuid)
 PRIVATE_KEY=""
 PUBLIC_KEY=""
 SHORT_ID=$(openssl rand -hex 8)
@@ -59,7 +59,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     -uuid)
-      UUID_VAR="$2"
+      UUID="$2"
       shift 2
       ;;
     -uninstall)
@@ -151,10 +151,15 @@ install_sing_box() {
   mkdir -p "$INSTALL_DIR"
 
   # 获取最新版本
-  LATEST_VERSION=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | jq -r .tag_name)
+  LATEST_VERSION=$(curl -s -m 10 https://api.github.com/repos/SagerNet/sing-box/releases/latest | jq -r .tag_name)
   if [[ -z "$LATEST_VERSION" || "$LATEST_VERSION" == "null" ]]; then
-    error "获取最新版本失败，请检查网络连接或 GitHub API 访问"
-    exit 1
+    warn "获取最新版本失败，尝试使用备用方法..."
+    LATEST_VERSION=$(curl -s -m 10 https://api.github.com/repos/SagerNet/sing-box/tags | jq -r '.[0].name')
+    
+    if [[ -z "$LATEST_VERSION" || "$LATEST_VERSION" == "null" ]]; then
+      error "无法获取 sing-box 版本信息，请检查网络连接或 GitHub API 访问"
+      exit 1
+    fi
   fi
 
   DOWNLOAD_URL="https://github.com/SagerNet/sing-box/releases/download/${LATEST_VERSION}/sing-box-${LATEST_VERSION:1}-linux-${ARCH}.tar.gz"
@@ -165,6 +170,14 @@ install_sing_box() {
     error "下载 sing-box 失败，请检查网络连接"
     exit 1
   }
+  
+  # 验证下载文件
+  if [ -s "/tmp/sing-box.tar.gz" ]; then
+    log "下载完成，验证文件..."
+  else
+    error "下载的文件为空，请检查网络连接或下载链接"
+    exit 1
+  fi
 
   tar -xzf "/tmp/sing-box.tar.gz" -C "/tmp" || {
     error "解压 sing-box 失败"
@@ -209,7 +222,7 @@ create_config_file() {
       "listen_port": ${PORT},
       "users": [
         {
-          "uuid": "${UUID_VAR}",
+          "uuid": "${UUID}",
           "flow": "xtls-rprx-vision"
         }
       ],
@@ -272,21 +285,21 @@ print_client_config() {
     SERVER_IP="localhost"
   fi
 
-  VLESS_URL="vless://${UUID_VAR}@${SERVER_IP}:${PORT}?encryption=none&flow=xtls-rprx-vision&security=reality&sni=${DOMAIN}&publicKey=${PUBLIC_KEY}&shortId=${SHORT_ID}#${SERVER_IP}"
+  VLESS_URL="vless://${UUID}@${SERVER_IP}:${PORT}?encryption=none&flow=xtls-rprx-vision&security=reality&sni=${DOMAIN}&publicKey=${PUBLIC_KEY}&shortId=${SHORT_ID}#${SERVER_IP}"
   CLASH_META_CONFIG="proxies:
   - name: ${SERVER_IP}
-    type: vless
     server: ${SERVER_IP}
     port: ${PORT}
-    uuid: ${UUID_VAR}
-    network: tcp
+    type: vless
+    uuid: ${UUID}
     tls: true
     flow: xtls-rprx-vision
-    servername: ${DOMAIN}
-    client-fingerprint: chrome
     reality-opts:
       public-key: ${PUBLIC_KEY}
-      short-id: ${SHORT_ID}"
+      short-id: ${SHORT_ID}
+    servername: ${DOMAIN}
+    client-fingerprint: chrome
+    network: tcp"
 
   # 打印配置信息
   echo
@@ -317,6 +330,17 @@ start_service() {
     exit 1
   fi
 }
+
+# 处理中断信号
+cleanup() {
+  echo
+  warn "安装被用户中断，正在清理..."
+  rm -rf "/tmp/sing-box.tar.gz" "/tmp/sing-box-"*
+  exit 1
+}
+
+# 设置中断处理
+trap cleanup INT TERM
 
 # 主函数
 main() {
