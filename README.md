@@ -7,8 +7,8 @@
 这是一个用于自动安装和配置 sing-box 的脚本，主要功能包括：
 
 - 自动检测系统架构并安装对应版本
-- 自动生成自签名证书
-- 配置 hysteria2 协议
+- 自动生成 REALITY 密钥对
+- 配置 VLESS+REALITY 协议
 - 创建并启用 systemd 服务
 - 生成客户端配置信息
 
@@ -35,20 +35,8 @@ bash <(curl -fsSL https://raw.githubusercontent.com/irasutoya/sing-box/main/inst
 
 选项:
   -port        设置监听端口 (默认: 443)
-  -password    设置访问密码 (默认: 随机生成)
-  -uninstall   卸载 sing-box 服务及所有相关文件
-  -help        显示帮助信息
-```
-
-### Xray 选项
-
-```shell
-用法: xray-install.sh [选项]
-
-选项:
-  -port        设置监听端口 (默认: 443)
   -uuid        设置 VLESS UUID (默认: 随机生成)
-  -uninstall   卸载 Xray 服务及所有相关文件
+  -uninstall   卸载 sing-box 服务及所有相关文件
   -help        显示帮助信息
 ```
 
@@ -59,15 +47,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/irasutoya/sing-box/main/inst
 - 主目录: `/root/sing-box`
 - 可执行文件: `/root/sing-box/bin/sing-box`
 - 配置文件: `/root/sing-box/config/config.json`
-- 证书文件: `/root/sing-box/config/cert.pem` 和 `/root/sing-box/config/key.pem`
 - 服务文件: `/etc/systemd/system/sing-box.service`
-
-### Xray 路径
-
-- 主目录: `/root/xray`
-- 可执行文件: `/root/xray/bin/xray`
-- 配置文件: `/root/xray/config/config.json`
-- 服务文件: `/etc/systemd/system/xray.service`
 
 ## 客户端配置
 
@@ -95,51 +75,9 @@ proxies:
     reality-opts:
       public-key: ${PUBLIC_KEY}
       short-id: ${SHORT_ID}
-      servername: ${DOMAIN}
+    servername: ${DOMAIN}
     client-fingerprint: chrome
     network: tcp
-```
-
-### Xray 客户端配置
-
-#### VLESS URL 格式
-
-```
-vless://${UUID}@${SERVER_IP}:${PORT}?encryption=none&flow=xtls-rprx-vision&security=reality&sni=${DOMAIN}&fp=chrome&pbk=${PUBLIC_KEY}&sid=${SHORT_ID}#${SERVER_IP}
-```
-
-#### Clash Meta 格式
-
-```yaml
-proxies:
-  - name: ${SERVER_IP}
-    server: ${SERVER_IP}
-    port: ${PORT}
-    type: vless
-    uuid: ${UUID}
-    tls: true
-    flow: xtls-rprx-vision
-    reality-opts:
-      public-key: ${PUBLIC_KEY}
-      short-id: ${SHORT_ID}
-      servername: ${DOMAIN}
-    client-fingerprint: chrome
-    network: tcp
-
-```
-hysteria2://{PASSWORD}@{SERVER_IP}:{PORT}/?insecure=1#{SERVER_IP}
-```
-
-### Clash Meta 格式
-
-```yaml
-proxies:
-  - name: {SERVER_IP}
-    type: hysteria2
-    server: {SERVER_IP}
-    port: {PORT}
-    password: {PASSWORD}
-    skip-cert-verify: true
 ```
 
 ## 故障排除
