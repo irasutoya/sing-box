@@ -26,12 +26,6 @@
 bash <(curl -fsSL https://raw.githubusercontent.com/irasutoya/sing-box/main/install.sh)
 ```
 
-### Xray 安装
-
-```shell
-bash <(curl -fsSL https://raw.githubusercontent.com/irasutoya/sing-box/main/xray-install.sh)
-```
-
 ## 命令选项
 
 ### sing-box 选项
