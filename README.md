@@ -19,7 +19,7 @@
 ## 使用方法
 
 ```shell
-wget -P /root -N --no-check-certificate "https://raw.githubusercontent.com/irasutoya/sing-box/main/install.sh" && chmod +x /root/install.sh && /root/install.sh
+bash <(curl -fsSL https://raw.githubusercontent.com/irasutoya/sing-box/main/install.sh)
 ```
 
 ## 命令选项
