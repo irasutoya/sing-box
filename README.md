@@ -1,4 +1,6 @@
-# sing-box 一键安装脚本
+# 代理服务一键安装脚本
+
+## sing-box 版本
 
 ## 功能介绍
 
@@ -18,11 +20,21 @@
 
 ## 使用方法
 
+### sing-box 安装
+
 ```shell
 bash <(curl -fsSL https://raw.githubusercontent.com/irasutoya/sing-box/main/install.sh)
 ```
 
+### Xray 安装
+
+```shell
+bash <(curl -fsSL https://raw.githubusercontent.com/irasutoya/sing-box/main/xray-install.sh)
+```
+
 ## 命令选项
+
+### sing-box 选项
 
 ```shell
 用法: install.sh [选项]
@@ -34,7 +46,21 @@ bash <(curl -fsSL https://raw.githubusercontent.com/irasutoya/sing-box/main/inst
   -help        显示帮助信息
 ```
 
+### Xray 选项
+
+```shell
+用法: xray-install.sh [选项]
+
+选项:
+  -port        设置监听端口 (默认: 443)
+  -uuid        设置 VLESS UUID (默认: 随机生成)
+  -uninstall   卸载 Xray 服务及所有相关文件
+  -help        显示帮助信息
+```
+
 ## 安装路径
+
+### sing-box 路径
 
 - 主目录: `/root/sing-box`
 - 可执行文件: `/root/sing-box/bin/sing-box`
@@ -42,11 +68,69 @@ bash <(curl -fsSL https://raw.githubusercontent.com/irasutoya/sing-box/main/inst
 - 证书文件: `/root/sing-box/config/cert.pem` 和 `/root/sing-box/config/key.pem`
 - 服务文件: `/etc/systemd/system/sing-box.service`
 
+### Xray 路径
+
+- 主目录: `/root/xray`
+- 可执行文件: `/root/xray/bin/xray`
+- 配置文件: `/root/xray/config/config.json`
+- 服务文件: `/etc/systemd/system/xray.service`
+
 ## 客户端配置
 
 安装完成后，脚本会自动生成以下格式的客户端配置信息：
 
-### V2Ray 格式
+### sing-box 客户端配置
+
+#### VLESS URL 格式
+
+```
+vless://${UUID}@${SERVER_IP}:${PORT}?encryption=none&flow=xtls-rprx-vision&security=reality&sni=${DOMAIN}&publicKey=${PUBLIC_KEY}&shortId=${SHORT_ID}#${SERVER_IP}
+```
+
+#### Clash Meta 格式
+
+```yaml
+proxies:
+  - name: ${SERVER_IP}
+    server: ${SERVER_IP}
+    port: ${PORT}
+    type: vless
+    uuid: ${UUID}
+    tls: true
+    flow: xtls-rprx-vision
+    reality-opts:
+      public-key: ${PUBLIC_KEY}
+      short-id: ${SHORT_ID}
+      servername: ${DOMAIN}
+    client-fingerprint: chrome
+    network: tcp
+```
+
+### Xray 客户端配置
+
+#### VLESS URL 格式
+
+```
+vless://${UUID}@${SERVER_IP}:${PORT}?encryption=none&flow=xtls-rprx-vision&security=reality&sni=${DOMAIN}&fp=chrome&pbk=${PUBLIC_KEY}&sid=${SHORT_ID}#${SERVER_IP}
+```
+
+#### Clash Meta 格式
+
+```yaml
+proxies:
+  - name: ${SERVER_IP}
+    server: ${SERVER_IP}
+    port: ${PORT}
+    type: vless
+    uuid: ${UUID}
+    tls: true
+    flow: xtls-rprx-vision
+    reality-opts:
+      public-key: ${PUBLIC_KEY}
+      short-id: ${SHORT_ID}
+      servername: ${DOMAIN}
+    client-fingerprint: chrome
+    network: tcp
 
 ```
 hysteria2://{PASSWORD}@{SERVER_IP}:{PORT}/?insecure=1#{SERVER_IP}
